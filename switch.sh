@@ -15,7 +15,7 @@ opts=$(
             awk -F: '
                 $3 ~ /app.slack/ { print $1":"$2":slack"}
                 $3 ~ /teams.microsoft.com/ { print $1":"$2":teams"}
-                $3 ~ /outlook.live.com/ { print $1":"$2":outlook"}
+                $3 ~ /outlook.(live|office).com/ { print $1":"$2":outlook"}
                 $3 ~ /sortedgroup.app.opsgenie/ { print $1":"$2":opsgenie"}
                 { print $0 }
             '
@@ -29,7 +29,15 @@ IFS=: read module ref _ <<< $(dmenu-wl <<< "$opts")
 case "$module" in
     t)
         bt activate $ref
-        swayr switch-to-app-or-urgent-or-lru-window -l -o -u firefox
+
+        IFS='.' read clientId windowId tabId _ <<< "$ref"
+
+        read _ url pid name _ <<< $(bt clients | awk "/^$clientId\./")
+
+        case "$name" in
+            firefox) swayr switch-to-app-or-urgent-or-lru-window -l -o -u firefox;;
+            *chromium) swayr switch-to-app-or-urgent-or-lru-window -l -o -u chromium-bin-browser-chromium;;
+        esac
         ;;
     w)
         swayr switch-to-app-or-urgent-or-lru-window -l -o -u $ref || $ref
