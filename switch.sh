@@ -9,18 +9,23 @@ opts=$(
     {
         bt list |
             awk '{
-                match($0,/https?:\/\/(www\.)?(.*)/,r)
-                print "w:"$1":"tolower(r[2])
+                    FS=" "; OFS=":"
+                    ref=$1
+                    match($0,/https?:\/\/(www\.)?(.*)/,r)
+                    
+                    $0=""
+                    $1="w"
+                    $2=ref
+                    $3=substr(tolower(r[2]),0,50)
+                    full=$0
                 }
-            ' |
-            awk -F: '
-                $3 ~ /app.slack/ { print $1":"$2":slack" }
-                $3 ~ /teams.microsoft.com/ { print $1":"$2":teams" }
-                $3 ~ /outlook.(live|office).com/ { print $1":"$2":outlook" }
-                $3 ~ /sortedgroup.app.opsgenie/ { print $1":"$2":opsgenie" }
-                $3 ~ /sortedproapp.visualstudio.com/ { print $1":"$2":azdo" }
-                $3 ~ /app.datadoghq.com/ { print $1":"$2":datadog" }
-                { print $0 }
+                $3 ~ /app.slack/ { $3="slack" }
+                $3 ~ /teams.microsoft.com/ { $3="teams" }
+                $3 ~ /outlook.(live|office).com/ { $3="outlook" }
+                $3 ~ /sortedgroup.app.opsgenie/ { $3="opsgenie" }
+                $3 ~ /sortedproapp.visualstudio.com/ { $3="azdo" }
+                $3 ~ /app.datadoghq.com/ { $3="datadog" }
+                { print; print full } 
             '
 
     } &
@@ -32,7 +37,7 @@ opts=$(
             do
                 awk '
                     $2 == "'$sid'" && $3 != "-" {
-                    print "t:'$pid'."$1":"tolower($3)
+                        print "t:'$pid'."$1":"tolower($3)
                     }
                     ' <<< "$windows"
             done
